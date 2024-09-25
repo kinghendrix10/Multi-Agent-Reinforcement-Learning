@@ -1,4 +1,3 @@
-<!-- /templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,35 +9,60 @@
 <body>
     <h1>Multi-Agent Reinforcement Learning Simulator</h1>
     
-    <form method="POST">
-        <label for="task">Task:</label>
-        <input type="text" id="task" name="task" required>
-        
-        <label for="cycles">Number of Cycles:</label>
-        <input type="number" id="cycles" name="cycles" min="1" max="100" required>
-        
-        <button type="submit">Start Simulation</button>
-    </form>
+    <div class="container">
+        <div class="control-panel">
+            <form method="POST">
+                <label for="task">Task:</label>
+                <input type="text" id="task" name="task" required>
+                
+                <label for="cycles">Number of Cycles:</label>
+                <input type="number" id="cycles" name="cycles" min="1" max="100" required>
+                
+                <button type="submit">Start Simulation</button>
+            </form>
 
-    {% if report %}
-        <h2>Simulation Results</h2>
-        <h3>Agents</h3>
-        <ul>
-            {% for agent in agents %}
-                <li>{{ agent.role }}: {{ ', '.join(agent.tools) }}</li>
-            {% endfor %}
-        </ul>
+            <h2>Agents</h2>
+            <div class="agents-grid">
+                {% for agent in agents %}
+                <div class="agent-card">
+                    <h3>{{ agent.role }}</h3>
+                    <p><strong>Role:</strong> {{ agent.role }}</p>
+                    <p><strong>Tools:</strong> {{ ', '.join(agent.tools) }}</p>
+                    <button onclick="editAgent({{ agent.id }})">Edit</button>
+                    <button onclick="deleteAgent({{ agent.id }})">Delete</button>
+                </div>
+                {% endfor %}
+            </div>
 
-        <h3>Conversation Log</h3>
-        <div id="conversation-log">
-            {% for message in conversation_log %}
-                <p>{{ message }}</p>
-            {% endfor %}
+            <h3>Create New Agent</h3>
+            <form id="create-agent-form">
+                <label for="agent-name">Name:</label>
+                <input type="text" id="agent-name" name="agent-name" required>
+
+                <label for="agent-role">Role:</label>
+                <input type="text" id="agent-role" name="agent-role" required>
+
+                <label for="agent-tools">Tools (comma-separated):</label>
+                <input type="text" id="agent-tools" name="agent-tools" required>
+
+                <button type="submit">Create Agent</button>
+            </form>
         </div>
 
-        <h3>Final Report</h3>
-        <pre>{{ report }}</pre>
-    {% endif %}
+        <div class="conversation-log">
+            <h2>Conversation Log</h2>
+            <div id="conversation-log">
+                {% for message in conversation_log %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="final-report">
+            <h2>Final Report</h2>
+            <pre id="final-report">{{ report }}</pre>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>

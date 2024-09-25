@@ -1,5 +1,5 @@
 # /main.py
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from environment import MultiAgentEnv
 from agent import LLMAgent
 import yaml
@@ -20,9 +20,9 @@ def index():
     if request.method == 'POST':
         task = request.form['task']
         cycles = int(request.form['cycles'])
-        report = run_simulation(task, cycles)
-        return render_template('index.html', report=report)
-    return render_template('index.html')
+        report, conversation_log = run_simulation(task, cycles)
+        return render_template('index.html', agents=agents, report=report, conversation_log=conversation_log)
+    return render_template('index.html', agents=agents)
 
 def run_simulation(task, cycles):
     env.reset()
@@ -38,7 +38,6 @@ def run_simulation(task, cycles):
         for agent in agents:
             context = env._get_observations()[agent.id]
             response = agent.generate_response(task, context)
-            report += f"{agent.role}: {response}\n"
             conversation_log.append(f"{agent.role}: {response}")
             
             # Apply action to environment (simplified)
@@ -47,11 +46,23 @@ def run_simulation(task, cycles):
         report += "\n"
     
     # Generate final report
-    report += "Final Report:\n"
-    for agent in agents:
-        report += f"{agent.role} contribution: {agent.generate_response(task, 'Summarize your contribution')}\n"
+    final_report = generate_final_report(task)
+    return final_report, conversation_log
+
+def generate_final_report(task):
+    report = "Final Report:\n\n"
     
-    return report, conversation_log
+    for agent in agents:
+        context_summary = "Summarize your key insights and actions"
+        insights_and_actions = agent.generate_response(task, context_summary)
+        
+        report += f"{agent.role}'s Contributions:\n"
+        report += f"- Role Description: {agent.role}\n"
+        report += f"- Tools Used: {', '.join(agent.tools)}\n"
+        report += f"- Key Insights and Actions Taken:\n"
+        report += f"   {insights_and_actions}\n\n"
+    
+    return report
 
 if __name__ == '__main__':
     app.run(debug=True)
