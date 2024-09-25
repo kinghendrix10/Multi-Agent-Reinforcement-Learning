@@ -65,5 +65,16 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        ws.onmessage = function(event) {
+            const message = event.data;
+            const conversationLog = document.getElementById('conversation-log');
+            const newMessage = document.createElement('p');
+            newMessage.textContent = message;
+            conversationLog.appendChild(newMessage);
+            conversationLog.scrollTop = conversationLog.scrollHeight;
+        };
+    </script>
 </body>
 </html>

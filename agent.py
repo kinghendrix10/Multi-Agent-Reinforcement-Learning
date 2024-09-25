@@ -1,28 +1,18 @@
 # /agent.py
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-import torch
+from llm_model import CerebrasLLM
 
 class LLMAgent:
     def __init__(self, agent_id, role, tools):
         self.id = agent_id
         self.role = role
         self.tools = tools
-        self.model = GPT2LMHeadModel.from_pretrained('gpt2')
-        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        self.llm = CerebrasLLM()
 
     def generate_response(self, task, context):
-        prompt = f"Task: {task}\nRole: {self.role}\nTools: {', '.join(self.tools)}\nContext: {context}\nResponse:"
-        input_ids = self.tokenizer.encode(prompt, return_tensors='pt')
+        system_prompt = f"You are an AI agent with the role of {self.role}. Your tools are: {', '.join(self.tools)}."
+        user_prompt = f"Task: {task}\nContext: {context}\nGenerate a response based on your role and tools:"
         
-        output = self.model.generate(
-            input_ids,
-            max_length=100,
-            num_return_sequences=1,
-            no_repeat_ngram_size=2,
-            temperature=0.7
-        )
-        
-        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+        return self.llm.generate_response(system_prompt, user_prompt)
 
     def learn(self, knowledge):
         # Simulate learning by updating the agent's knowledge

@@ -1,19 +1,23 @@
 # /main.py
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 from environment import MultiAgentEnv
 from agent import LLMAgent
 import yaml
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Load configuration
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
-# Initialize environment and agents
-env = MultiAgentEnv(config['environment'])
+# Initialize agents
 agents = [LLMAgent(i, agent_config['role'], agent_config['tools']) 
           for i, agent_config in enumerate(config['agents'])]
+
+# Register and initialize environment
+env = MultiAgentEnv(config['environment'])
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -64,5 +68,9 @@ def generate_final_report(task):
     
     return report
 
+@socketio.on('message')
+def handle_message(message):
+    emit('response', {'data': f'Received: {message}'})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
