@@ -1,0 +1,9 @@
+# /requirements.txt
+Flask
+gym
+numpy
+transformers
+torch
+pyyaml
+cerebras-cloud-sdk
+ray[rllib]
