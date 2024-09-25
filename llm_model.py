@@ -1,7 +1,8 @@
-# /llm_model.py
 import os
 from cerebras.cloud.sdk import Cerebras
+from dotenv import load_dotenv
 
+load_dotenv()
 class CerebrasLLM:
     def __init__(self):
         self.client = Cerebras(
@@ -9,7 +10,7 @@ class CerebrasLLM:
         )
 
     def generate_response(self, system_prompt, user_prompt):
-        stream = self.client.chat.completions.create(
+        response = self.client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
@@ -21,24 +22,10 @@ class CerebrasLLM:
                 }
             ],
             model="llama3.1-70b",
-            stream=True,
+            stream=False,
             max_tokens=1024,
             temperature=1,
             top_p=1
         )
 
-        response = ""
-        for chunk in stream:
-            content = chunk.choices[0].delta.content
-            if content:
-                response += content
-
-        return response
-
-# Usage example:
-if __name__ == "__main__":
-    llm = CerebrasLLM()
-    system_prompt = "You are a helpful AI assistant."
-    user_prompt = "What is the capital of France?"
-    response = llm.generate_response(system_prompt, user_prompt)
-    print(response)
+        return response.choices[0].message.content
