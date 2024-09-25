@@ -1,0 +1,29 @@
+# /config.yaml
+environment:
+  num_agents: 4
+  max_steps: 100
+
+agents:
+  - name: Researcher
+    role: Gather and analyze information
+    tools: 
+      - Internet access
+      - Data analysis software
+  - name: Planner
+    role: Create and optimize strategies
+    tools:
+      - Project management software
+      - Decision-making algorithms
+  - name: Executor
+    role: Implement plans and monitor progress
+    tools:
+      - Task automation tools
+      - Progress tracking software
+  - name: Critic
+    role: Evaluate outcomes and suggest improvements
+    tools:
+      - Evaluation frameworks
+      - Feedback analysis tools
+
+simulation:
+  num_cycles: 10
