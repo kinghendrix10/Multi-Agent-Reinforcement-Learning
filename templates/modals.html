@@ -1,4 +1,5 @@
-<!-- /templates/modals.html -->
+<!-- templates/modals.html -->
+<!-- Create Agent Modal -->
 <div class="modal fade" id="createAgentModal" tabindex="-1" aria-labelledby="createAgentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -8,6 +9,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Agent Fields -->
                     <div class="mb-3">
                         <label for="agentName" class="form-label">Name</label>
                         <input type="text" class="form-control" id="agentName" name="name" required>
@@ -29,47 +31,30 @@
     </div>
 </div>
 
-<div class="modal fade" id= "createTaskModal" tabindex="-1" aria-labelledby= "createTaskModalLabel" aria-hidden= "true">
-    <div class= "modal-dialog">
-        <div class= "modal-content">
-            <form id= "createTaskForm">
-                <div class= "modal-header">
-                    <h5 class= "modal-title"id= "createTaskModalLabel">Create Task</h5> 
-                    <button type= "button"class= "btn-close"d ata-bs-dismiss= "modal"a ria-label= "Close"></button> 
-                </div> 
-                <divclass= "modal-body"> 
-                    <!-- Task Fields --> 
-                    <divclass= "mb-3"> 
-                        <label for= "taskDescription"class= "form-label">Task Description</label> 
-                        <textarea class= "form-control"id= "taskDescription"name= "task"
-                            rows= "3"
-                            required></textarea> 
-                    </div> 
-                    <divclass= "mb-3"> 
-                        <label for= "taskCycles"class= "form-label">Number of Cycles</label> 
-                        <inputtype= "number"class= "form-control"id= "taskCycles"name=
-                            cycles"value=
-                            10min=
-                            1required
-                        > 
-                    </
-                    div
-                    > 
-                </ div > 
-                <
-                divclass =
-                modal-footer >
-                <
-                buttontype =
-                submitclass =
-                btn btn-success > Create Task <
-                / button > <
-                / div >
-            <
-            / form >
-        <
-        / div >
-    <
-    / div >
-<
-/ div >
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="createTaskForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createTaskModalLabel">Create Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Task Fields -->
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Task Description</label>
+                        <textarea class="form-control" id="taskDescription" name="task" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskCycles" class="form-label">Number of Cycles</label>
+                        <input type="number" class="form-control" id="taskCycles" name="cycles" value="10" min="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
