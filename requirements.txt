@@ -6,6 +6,7 @@ torch
 pyyaml
 cerebras-cloud-sdk
 ray[rllib]
-groq
 python-dotenv
 flask-socketio
+flask-cors
+flask-restful

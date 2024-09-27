@@ -10,57 +10,94 @@
     <h1>Multi-Agent Reinforcement Learning Simulator</h1>
     
     <div class="container">
-        <div class="control-panel">
-            <form method="POST">
-                <label for="task">Task:</label>
-                <input type="text" id="task" name="task" required>
-                
-                <label for="cycles">Number of Cycles:</label>
-                <input type="number" id="cycles" name="cycles" min="1" max="100" required>
-                
-                <button type="submit">Start Simulation</button>
-            </form>
+        <div class="sidebar">
+            <h2>Navigation</h2>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#agents">Agents</a></li>
+                <li><a href="#tasks">Tasks</a></li>
+                <li><a href="#logs">Conversation Logs</a></li>
+                <li><a href="#reports">Reports</a></li>
+            </ul>
+        </div>
 
-            <h2>Agents</h2>
-            <div class="agents-grid">
-                {% for agent in agents %}
-                <div class="agent-card">
-                    <h3>{{ agent.role }}</h3>
-                    <p><strong>Role:</strong> {{ agent.role }}</p>
-                    <p><strong>Tools:</strong> {{ ', '.join(agent.tools) }}</p>
-                    <button onclick="editAgent({{ agent.id }})">Edit</button>
-                    <button onclick="deleteAgent({{ agent.id }})">Delete</button>
+        <div class="main-content">
+            <div class="control-panel">
+                <form method="POST">
+                    <label for="task">Task:</label>
+                    <input type="text" id="task" name="task" required>
+                    
+                    <label for="cycles">Number of Cycles:</label>
+                    <input type="number" id="cycles" name="cycles" min="1" max="100" required>
+                    
+                    <button type="submit">Start Simulation</button>
+                </form>
+
+                <h2>Agents</h2>
+                <div class="agents-grid">
+                    {% for agent in agents %}
+                    <div class="agent-card">
+                        <h3>{{ agent.role }}</h3>
+                        <p><strong>Role:</strong> {{ agent.role }}</p>
+                        <p><strong>Tools:</strong> {{ ', '.join(agent.tools) }}</p>
+                        <button onclick="editAgent({{ agent.id }})">Edit</button>
+                        <button onclick="deleteAgent({{ agent.id }})">Delete</button>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+
+                <h3>Create New Agent</h3>
+                <form id="create-agent-form">
+                    <label for="agent-name">Name:</label>
+                    <input type="text" id="agent-name" name="agent-name" required>
+
+                    <label for="agent-role">Role:</label>
+                    <input type="text" id="agent-role" name="agent-role" required>
+
+                    <label for="agent-tools">Tools (comma-separated):</label>
+                    <input type="text" id="agent-tools" name="agent-tools" required>
+
+                    <button type="submit">Create Agent</button>
+                </form>
             </div>
 
-            <h3>Create New Agent</h3>
-            <form id="create-agent-form">
-                <label for="agent-name">Name:</label>
-                <input type="text" id="agent-name" name="agent-name" required>
+            <div class="tabs">
+                <button class="tablink" onclick="openTab(event, 'conversation-log')">Conversation Log</button>
+                <button class="tablink" onclick="openTab(event, 'final-report')">Final Report</button>
+            </div>
 
-                <label for="agent-role">Role:</label>
-                <input type="text" id="agent-role" name="agent-role" required>
+            <div id="conversation-log" class="tabcontent">
+                <h2>Conversation Log</h2>
+                <div id="conversation-log-content">
+                    {% for message in conversation_log %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            </div>
 
-                <label for="agent-tools">Tools (comma-separated):</label>
-                <input type="text" id="agent-tools" name="agent-tools" required>
+            <div id="final-report" class="tabcontent">
+                <h2>Final Report</h2>
+                <pre id="final-report-content">{{ report }}</pre>
+            </div>
+        </div>
+    </div>
 
-                <button type="submit">Create Agent</button>
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Create/Edit Agent</h2>
+            <form id="modal-agent-form">
+                <label for="modal-agent-name">Name:</label>
+                <input type="text" id="modal-agent-name" name="modal-agent-name" required>
+
+                <label for="modal-agent-role">Role:</label>
+                <input type="text" id="modal-agent-role" name="modal-agent-role" required>
+
+                <label for="modal-agent-tools">Tools (comma-separated):</label>
+                <input type="text" id="modal-agent-tools" name="modal-agent-tools" required>
+
+                <button type="submit">Save Agent</button>
             </form>
-        </div>
-
-        <div class="conversation-log">
-            <h2>Conversation Log</h2>
-            <div id="conversation-log">
-                {% for message in conversation_log %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="final-report">
-            <h2>Final Report</h2>
-            <pre id="final-report">{{ report }}</pre>
         </div>
     </div>
 
@@ -69,12 +106,30 @@
         const ws = new WebSocket('ws://localhost:8765');
         ws.onmessage = function(event) {
             const message = event.data;
-            const conversationLog = document.getElementById('conversation-log');
+            const conversationLog = document.getElementById('conversation-log-content');
             const newMessage = document.createElement('p');
             newMessage.textContent = message;
             conversationLog.appendChild(newMessage);
             conversationLog.scrollTop = conversationLog.scrollHeight;
         };
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function closeModal() {
+            document.getElementById('agent-modal').style.display = 'none';
+        }
     </script>
 </body>
 </html>
