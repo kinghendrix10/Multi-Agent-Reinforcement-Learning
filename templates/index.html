@@ -1,9 +1,8 @@
-<!-- templates/index.html -->
+<!-- /templates/index.html -->
 {% extends 'layout.html' %}
 {% block content %}
 <h1>Dashboard</h1>
 <div class="row">
-    <!-- Quick Actions -->
     <div class="col-md-12">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAgentModal">Create Agent</button>
         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
@@ -11,23 +10,16 @@
 </div>
 <hr>
 <div class="row">
-    <!-- Agents Overview -->
     <div class="col-md-6">
         <h3>Agents</h3>
         <div class="list-group" id="agentsList">
             <!-- Agents will be loaded here -->
-        </div>
-    </div>
-    <!-- Tasks Overview -->
-    <div class="col-md-6">
-        <h3>Tasks</h3>
-        <div class="list-group" id="tasksList">
-            <!-- Tasks will be loaded here -->
+            {% for agent in agents %}
+                <a href="#" class="list-group-item list-group-item-action">{{ agent.name }} - {{ agent.role }}</a>
+            {% endfor %}
         </div>
     </div>
 </div>
 
-<!-- Modals -->
 {% include 'modals.html' %}
-
 {% endblock %}
