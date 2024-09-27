@@ -1,4 +1,5 @@
 # /agent.py
+
 from llm_model import CerebrasLLM
 
 class LLMAgent:
@@ -13,12 +14,13 @@ class LLMAgent:
     def generate_response(self, task, context):
         system_prompt = f"You are an AI agent named {self.name} with the role of {self.role}. Your tools are: {', '.join(self.tools)}."
         user_prompt = f"Task: {task}\nContext: {context}\nGenerate a response based on your role and tools:"
-
         return self.llm.generate_response(system_prompt, user_prompt)
 
-    def learn(self, knowledge):
-        """
-        Learn from new knowledge and update the agent's knowledge base.
-        """
-        self.knowledge_base.append(knowledge)
-        # Optionally, fine-tune the LLM or adjust prompts based on new knowledge
+    def learning_transfer_function(self, new_knowledge):
+        system_prompt = f"You are an AI agent named {self.name} with the role of {self.role}."
+        user_prompt = f"New Knowledge: {new_knowledge}\nSummarize and extract key information to update your knowledge base:"
+        summary = self.llm.generate_response(system_prompt, user_prompt)
+        self.knowledge_base.append(summary)
+
+    def learn(self, task, knowledge):
+        self.learning_transfer_function(knowledge)
