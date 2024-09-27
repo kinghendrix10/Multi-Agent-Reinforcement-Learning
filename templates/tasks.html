@@ -1,0 +1,13 @@
+<!-- templates/tasks.html -->
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Tasks</h1>
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
+<div class="row" id="tasksContainer">
+    <!-- Task cards will be loaded here -->
+</div>
+
+<!-- Modals -->
+{% include 'modals.html' %}
+
+{% endblock %}

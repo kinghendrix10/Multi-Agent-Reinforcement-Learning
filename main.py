@@ -5,10 +5,16 @@ from flask_restful import Api, Resource
 from agent import LLMAgent
 import yaml
 import threading
+from dotenv import load_dotenv
+import os
+from flask_cors import CORS
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
-socketio = SocketIO(app)
+app.config['SECRET_KEY'] = os.environ.get("SECRET_API_KEY")
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 api = Api(app)
 
 # In-memory storage for agents
@@ -148,6 +154,26 @@ def generate_final_report(task):
         report += f"   {insights_and_actions}\n\n"
 
     return report
+
+@app.route('/agents')
+def agents_page():
+    return render_template('agents.html')
+
+@app.route('/tasks')
+def tasks_page():
+    return render_template('tasks.html')
+
+@app.route('/conversations')
+def conversation_page():
+    return render_template('conversation.html')
+
+# Add an API endpoint for conversations
+class ConversationResource(Resource):
+    def get(self):
+        global conversation_log
+        return jsonify(conversation_log)
+
+api.add_resource(ConversationResource, '/api/conversations')
 
 @socketio.on('connect')
 def handle_connect():

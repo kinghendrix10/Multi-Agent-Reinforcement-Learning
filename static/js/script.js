@@ -1,58 +1,152 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const conversationLog = document.getElementById('conversation-log');
-    if (conversationLog) {
-        conversationLog.scrollTop = conversationLog.scrollHeight;
-    }
+// static/js/main.js
+$(document).ready(function() {
+    // Initialize Socket.IO client
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-    const createAgentForm = document.getElementById('create-agent-form');
-    const agentList = document.querySelector('.agents-grid');
+    // Load agents and tasks on page load
+    loadAgents();
+    loadTasks();
 
-    createAgentForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const name = document.getElementById('agent-name').value.trim();
-        const role = document.getElementById('agent-role').value.trim();
-        const tools = document.getElementById('agent-tools').value.split(',').map(tool => tool.trim());
+    // Handle agent creation
+    $('#createAgentForm').submit(function(event) {
+        event.preventDefault();
+        var name = $('#agentName').val();
+        var role = $('#agentRole').val();
+        var tools = $('#agentTools').val().split(',').map(function(item) {
+            return item.trim();
+        });
 
-        const newAgent = document.createElement('div');
-        newAgent.className = 'agent-card';
-        newAgent.innerHTML = `
-            <h3>${name}</h3>
-            <p><strong>Role:</strong> ${role}</p>
-            <p><strong>Tools:</strong> ${tools.join(', ')}</p>
-            <button onclick="editAgent('${name}')">Edit</button>
-            <button onclick="deleteAgent('${name}')">Delete</button>`;
-        agentList.appendChild(newAgent);
-
-        // Clear form fields
-        createAgentForm.reset();
+        $.ajax({
+            url: '/api/agents',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ 'name': name, 'role': role, 'tools': tools }),
+            success: function(response) {
+                $('#createAgentModal').modal('hide');
+                $('#createAgentForm')[0].reset();
+                loadAgents();
+            },
+            error: function(error) {
+                alert('Error creating agent');
+            }
+        });
     });
 
-    window.editAgent = function(agentName) {
-        alert(`Edit agent: ${agentName}`);
-    };
+    // Handle task creation
+    $('#createTaskForm').submit(function(event) {
+        event.preventDefault();
+        var task = $('#taskDescription').val();
+        var cycles = $('#taskCycles').val();
 
-    window.deleteAgent = function(agentName) {
-        alert(`Delete agent: ${agentName}`);
-    };
+        // Submit task via form post
+        $.ajax({
+            url: '/',
+            type: 'POST',
+            data: { 'task': task, 'cycles': cycles },
+            success: function(response) {
+                $('#createTaskModal').modal('hide');
+                $('#createTaskForm')[0].reset();
+                loadTasks();
+            },
+            error: function(error) {
+                alert('Error creating task');
+            }
+        });
+    });
 
-    const ws = new WebSocket('ws://localhost:8765');
-    ws.onopen = function() {
-        console.log("Connected to WebSocket server");
-    };
+    // Socket.IO events
+    socket.on('connect', function() {
+        console.log('Connected to server');
+    });
 
-    ws.onmessage = function(event) {
-        const message = event.data;
-        const newMessage = document.createElement('p');
-        newMessage.textContent = message;
-        conversationLog.appendChild(newMessage);
-        conversationLog.scrollTop = conversationLog.scrollHeight;
-    };
+    socket.on('task_completed', function(data) {
+        // Display the report and conversation log
+        alert('Task completed');
+        loadConversations();
+    });
 
-    ws.onerror = function(error) {
-        console.error("WebSocket error:", error);
-    };
+    // Load agents
+    function loadAgents() {
+        $.ajax({
+            url: '/api/agents',
+            type: 'GET',
+            success: function(agents) {
+                var agentsList = $('#agentsList');
+                var agentsContainer = $('#agentsContainer');
+                agentsList.empty();
+                agentsContainer.empty();
 
-    ws.onclose = function() {
-        console.log("WebSocket connection closed");
-    };
+                agents.forEach(function(agent) {
+                    var agentItem = $('<a href="#" class="list-group-item list-group-item-action"></a>').text(agent.name + ' (' + agent.role + ')');
+                    agentsList.append(agentItem);
+
+                    var agentCard = `
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                ${agent.name}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">${agent.role}</h5>
+                                <p class="card-text">Tools: ${agent.tools.join(', ')}</p>
+                                <button class="btn btn-sm btn-danger delete-agent" data-agent-id="${agent.id}">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    agentsContainer.append(agentCard);
+                });
+
+                // Handle agent deletion
+                $('.delete-agent').click(function() {
+                    var agentId = $(this).data('agent-id');
+                    $.ajax({
+                        url: '/api/agents/' + agentId,
+                        type: 'DELETE',
+                        success: function(response) {
+                            loadAgents();
+                        },
+                        error: function(error) {
+                            alert('Error deleting agent');
+                        }
+                    });
+                });
+            },
+            error: function(error) {
+                alert('Error loading agents');
+            }
+        });
+    }
+
+    // Load tasks
+    function loadTasks() {
+        // Since tasks are not stored persistently, this function can be expanded when tasks are stored.
+        // For now, we can display a placeholder.
+        var tasksList = $('#tasksList');
+        var tasksContainer = $('#tasksContainer');
+        tasksList.empty();
+        tasksContainer.empty();
+
+        var taskItem = $('<a href="#" class="list-group-item list-group-item-action"></a>').text('No tasks available');
+        tasksList.append(taskItem);
+    }
+
+    // Load conversation logs
+    function loadConversations() {
+        $.ajax({
+            url: '/api/conversations',
+            type: 'GET',
+            success: function(conversations) {
+                var conversationLog = $('#conversationLog');
+                conversationLog.empty();
+
+                conversations.forEach(function(entry) {
+                    var logEntry = $('<p></p>').text(entry);
+                    conversationLog.append(logEntry);
+                });
+            },
+            error: function(error) {
+                alert('Error loading conversations');
+            }
+        });
+    }
 });
