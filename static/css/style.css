@@ -1,8 +1,38 @@
-/* static/css/styles.css */
+/* /static/css/style.css */
 body {
-    padding-top: 56px;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f9ff;
 }
 
-.card {
-    margin-bottom: 15px;
+h1, h2, h3 {
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.control-panel {
+    background-color: #e7f0ff;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.conversation-log, .final-report {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.conversation-log p {
+    font-family: 'Courier New', Courier, monospace; /* Example font */
+}
+
+.final-report pre {
+    font-family: 'Times New Roman', Times, serif; /* Example font */
 }
