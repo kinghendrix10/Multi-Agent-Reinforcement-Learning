@@ -154,35 +154,79 @@
 
 // /static/js/script.js
 
+// /static/js/script.js
+
+// /static/js/script.js
+
 document.addEventListener('DOMContentLoaded', function() {
-   const socket = io.connect('http://' + document.domain + ':' + location.port);
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-   socket.on('connect', function() {
-       socket.send('User connected');
-   });
+    socket.on('connect', function() {
+        console.log('Connected to WebSocket');
+    });
 
-   socket.on('response', function(data) {
-       console.log(data);
-       // Update UI based on data received
-   });
+    socket.on('task_completed', function(data) {
+        updateConversationLog(data.conversation_log);
+        updateFinalReport(data.report);
+    });
 
-   const createAgentForm = document.getElementById('createAgentForm');
-   createAgentForm.addEventListener('submit', function(e) {
-       e.preventDefault();
-       const name = document.getElementById('agentName').value.trim();
-       const role = document.getElementById('agentRole').value.trim();
-       const tools = document.getElementById('agentTools').value.split(',').map(tool => tool.trim());
+    function updateConversationLog(log) {
+        const conversationLogElement = document.getElementById('conversationLog');
+        if (conversationLogElement) {
+            conversationLogElement.innerHTML = '';
+            log.forEach(message => {
+                const p = document.createElement('p');
+                p.textContent = message;
+                conversationLogElement.appendChild(p);
+            });
+            conversationLogElement.scrollTop = conversationLogElement.scrollHeight;
+        }
+    }
 
-       // Send new agent data to server
-       fetch('/api/agents', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ name, role, tools })
-       }).then(response => response.json()).then(data => {
-           console.log(data);
-           // Update UI with new agent
-       });
+    function updateFinalReport(report) {
+        const finalReportElement = document.getElementById('finalReport');
+        if (finalReportElement) {
+            finalReportElement.textContent = report;
+        }
+    }
 
-       createAgentForm.reset();
-   });
+    const createAgentForm = document.getElementById('createAgentForm');
+    if (createAgentForm) {
+        createAgentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(createAgentForm);
+            fetch('/api/agents', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Agent created:', data);
+                location.reload();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+    const createTaskForm = document.getElementById('createTaskForm');
+    if (createTaskForm) {
+        createTaskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(createTaskForm);
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.open();
+                document.write(html);
+                document.close();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
 });

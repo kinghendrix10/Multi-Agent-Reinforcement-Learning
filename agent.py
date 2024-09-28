@@ -23,4 +23,8 @@ class LLMAgent:
         self.knowledge_base.append(summary)
 
     def learn(self, task, knowledge):
-        self.learning_transfer_function(knowledge)
+        system_prompt = f"You are an AI agent named {self.name} with the role of {self.role}. Your tools are: {', '.join(self.tools)}."
+        user_prompt = f"Task: {task}\nNew Knowledge: {self.learning_transfer_function(knowledge)}\nUpdate your knowledge base and provide a summary of what you've learned:"
+        learning_summary = self.llm.generate_response(system_prompt, user_prompt)
+        self.knowledge_base.append(learning_summary)
+        return learning_summary

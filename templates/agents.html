@@ -1,13 +1,23 @@
-<!-- templates/agents.html -->
+<!-- /templates/agents.html -->
 {% extends 'layout.html' %}
 {% block content %}
 <h1>Agents</h1>
 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createAgentModal">Create Agent</button>
 <div class="row" id="agentsContainer">
-    <!-- Agent cards will be loaded here -->
+    {% for agent in agents %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ agent.name }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ agent.role }}</h6>
+                <p class="card-text">Tools: {{ ', '.join(agent.tools) }}</p>
+                <button class="btn btn-sm btn-outline-primary edit-agent" data-agent-id="{{ agent.id }}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger delete-agent" data-agent-id="{{ agent.id }}">Delete</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
-<!-- Modals -->
 {% include 'modals.html' %}
-
 {% endblock %}
