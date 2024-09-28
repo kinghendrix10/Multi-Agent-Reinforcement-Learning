@@ -3,12 +3,12 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_restful import Api, Resource
-from flask_cors import CORS
 from agent import LLMAgent
 import yaml
 import threading
-import os
 from dotenv import load_dotenv
+import os
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -100,12 +100,17 @@ def index():
         cycles = int(request.form['cycles'])
         task_queue.append({'task': task, 'cycles': cycles})
         threading.Thread(target=process_tasks).start()
-        return render_template('index.html', agents=agents.values(), report="Task is being processed.", conversation_log=conversation_log)
+        return jsonify({'message': 'Task added to queue'})
     return render_template('index.html', agents=agents.values())
+
+def process_tasks():
+    while task_queue:
+        task = task_queue.pop(0)
+        run_simulation(task['task'], task['cycles'])
 
 def run_simulation(task, cycles):
     global conversation_log
-    conversation_log.clear()
+    conversation_log = []
     
     for cycle in range(cycles):
         for agent in agents.values():
@@ -115,7 +120,7 @@ def run_simulation(task, cycles):
             agent.learn(task, response)
     
     final_report = generate_final_report(task)
-    socketio.emit('task_completed', {'report': final_report, 'conversation_log': conversation_log})
+    socketio.emit('task_completed', {'report': final_report, 'conversation_log': conversation_log}, namespace='/')
 
 def generate_final_report(task):
     report_lines = ["Final Report:\n"]

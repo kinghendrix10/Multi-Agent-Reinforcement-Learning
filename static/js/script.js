@@ -156,10 +156,10 @@
 
 // /static/js/script.js
 
-// /static/js/script.js
-
 document.addEventListener('DOMContentLoaded', function() {
-    const socket = io.connect('http://' + document.domain + ':' + location.port);
+    const socket = io.connect('http://' + document.domain + ':' + location.port, {
+        transports: ['websocket']
+    });
 
     socket.on('connect', function() {
         console.log('Connected to WebSocket');
@@ -220,13 +220,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.text())
-            .then(html => {
-                document.open();
-                document.write(html);
-                document.close();
+            .then(response => response.json())
+            .then(data => {
+                console.log('Task created:', data);
+                // Optionally update UI to show task is being processed
             })
             .catch(error => console.error('Error:', error));
         });
     }
+
+    // Add error logging
+    socket.on('connect_error', (error) => {
+        console.log('Connection Error:', error);
+    });
+
+    socket.on('connect_timeout', (timeout) => {
+        console.log('Connection Timeout:', timeout);
+    });
 });
