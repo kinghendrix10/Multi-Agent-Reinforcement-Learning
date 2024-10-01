@@ -1,24 +1,37 @@
-# /agent.py
-from llm_model import CerebrasLLM
+# agent.py
 
-class LLMAgent:
-    def __init__(self, agent_id, name, role, tools):
-        self.id = agent_id
+class Agent:
+    def __init__(self, agent_id, name, role, instructions, parent=None):
+        self.agent_id = agent_id
         self.name = name
         self.role = role
-        self.tools = tools
-        self.llm = CerebrasLLM()
-        self.knowledge_base = []
+        self.instructions = instructions
+        self.parent = parent  # Parent agent ID
+        self.children = []    # List of child Agent instances
+        self.response = None
 
-    def generate_response(self, task, context):
-        system_prompt = f"You are an AI agent named {self.name} with the role of {self.role}. Your tools are: {', '.join(self.tools)}."
-        user_prompt = f"Task: {task}\nContext: {context}\nGenerate a response based on your role and tools:"
+    def add_child(self, child_agent):
+        self.children.append(child_agent)
 
-        return self.llm.generate_response(system_prompt, user_prompt)
+    def execute(self, context="", llm=None):
+        # Generate the agent's response using the LLM
+        system_prompt = f"You are an AI agent with the role of {self.role}."
+        user_prompt = f"{self.instructions}\nContext: {context}"
 
-    def learn(self, knowledge):
-        """
-        Learn from new knowledge and update the agent's knowledge base.
-        """
-        self.knowledge_base.append(knowledge)
-        # Optionally, fine-tune the LLM or adjust prompts based on new knowledge
+        if llm:
+            self.response = llm.generate_response(system_prompt, user_prompt)
+        else:
+            self.response = "Default response without LLM."
+
+        # Execute child agents with the current agent's response as context
+        for child in self.children:
+            child.execute(context=self.response, llm=llm)
+
+    def to_dict(self):
+        return {
+            'id': self.agent_id,
+            'name': self.name,
+            'role': self.role,
+            'instructions': self.instructions,
+            'parent': self.parent
+        }
