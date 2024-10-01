@@ -1,33 +1,94 @@
 <!-- templates/index.html -->
-{% extends 'layout.html' %}
-{% block content %}
-<h1>Dashboard</h1>
-<div class="row">
-    <!-- Quick Actions -->
-    <div class="col-md-12">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAgentModal">Create Agent</button>
-        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
-    </div>
-</div>
-<hr>
-<div class="row">
-    <!-- Agents Overview -->
-    <div class="col-md-6">
-        <h3>Agents</h3>
-        <div class="list-group" id="agentsList">
-            <!-- Agents will be loaded here -->
-        </div>
-    </div>
-    <!-- Tasks Overview -->
-    <div class="col-md-6">
-        <h3>Tasks</h3>
-        <div class="list-group" id="tasksList">
-            <!-- Tasks will be loaded here -->
-        </div>
-    </div>
-</div>
 
-<!-- Modals -->
-{% include 'modals.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agent Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Agent Network Simulator</h1>
 
-{% endblock %}
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <a class="navbar-brand" href="#">Agent Simulator</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_agents') }}">Manage Agents</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Task Input Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="task">Enter Task:</label>
+                        <input type="text" class="form-control" id="task" name="task" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Execute Task</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Agents Display -->
+        <h2>Agents</h2>
+        <div class="row">
+            {% for agent in agents %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        {{ agent.name }}
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Role:</strong> {{ agent.role }}</p>
+                        <p><strong>Instructions:</strong> {{ agent.instructions }}</p>
+                        <p><strong>Parent:</strong> {{ agent_network.get_agent(agent.parent).name if agent.parent else 'None' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Conversation Log -->
+        {% if conversation_log %}
+        <h2>Conversation Log</h2>
+        <div class="card mb-4">
+            <div class="card-body" id="conversation-log">
+                {% for message in conversation_log %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-secondary" onclick="saveConversation()">Save Conversation Log</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Final Report -->
+        {% if report %}
+        <h2>Final Report</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <pre>{{ report }}</pre>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-secondary" onclick="saveReport()">Save Report</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Include JavaScript files -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+</body>
+</html>
