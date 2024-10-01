@@ -25,70 +25,101 @@
             </div>
         </nav>
 
-        <!-- Task Input Form -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="POST">
-                    <div class="form-group">
-                        <label for="task">Enter Task:</label>
-                        <input type="text" class="form-control" id="task" name="task" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Execute Task</button>
-                </form>
-            </div>
-        </div>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="agents-tab" data-toggle="tab" href="#agents" role="tab" aria-controls="agents" aria-selected="true">Agents</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="conversation-tab" data-toggle="tab" href="#conversation" role="tab" aria-controls="conversation" aria-selected="false">Conversation</a>
+            </li>
+            {% if report %}
+            <li class="nav-item">
+                <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report" aria-selected="false">Report</a>
+            </li>
+            {% endif %}
+        </ul>
 
-        <!-- Agents Display -->
-        <h2>Agents</h2>
-        <div class="row">
-            {% for agent in agents %}
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        {{ agent.name }}
-                    </div>
+        <div class="tab-content" id="mainTabContent">
+            <!-- Agents Tab -->
+            <div class="tab-pane fade show active" id="agents" role="tabpanel" aria-labelledby="agents-tab">
+                <!-- Task Input Form -->
+                <div class="card mb-4 mt-3">
                     <div class="card-body">
-                        <p><strong>Role:</strong> {{ agent.role }}</p>
-                        <p><strong>Instructions:</strong> {{ agent.instructions }}</p>
-                        <p><strong>Parent:</strong> {{ agent_network.get_agent(agent.parent).name if agent.parent else 'None' }}</p>
+                        <form method="POST">
+                            <div class="form-group">
+                                <label for="task">Enter Task:</label>
+                                <input type="text" class="form-control" id="task" name="task" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Execute Task</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Agents Display -->
+                <h2>Agents</h2>
+                <div class="row">
+                    {% for agent in agents %}
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                {{ agent.name }}
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Role:</strong> {{ agent.role }}</p>
+                                <p><strong>Instructions:</strong> {{ agent.instructions }}</p>
+                                <p><strong>Parent:</strong> {{ agent.parent_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Conversation Tab -->
+            <div class="tab-pane fade" id="conversation" role="tabpanel" aria-labelledby="conversation-tab">
+                {% if conversation_log %}
+                <div class="chat-container mt-3">
+                    <div class="messages" id="conversation-log">
+                        {% for message in conversation_log %}
+                        <div class="message {% if message.sender == 'user' %}user{% else %}ai{% endif %}">
+                            <strong>{{ message.sender_name }}:</strong> {{ message.text }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chat-input" placeholder="Type a message..." class="form-control" onkeydown="if(event.key === 'Enter') sendMessage();">
+                        <button id="send-button" class="btn btn-primary" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+                {% else %}
+                <p>No conversation yet. Execute a task to start.</p>
+                {% endif %}
+            </div>
+
+            <!-- Report Tab -->
+            {% if report %}
+            <div class="tab-pane fade" id="report" role="tabpanel" aria-labelledby="report-tab">
+                <h2 class="mt-3">Final Report</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <pre>{{ report }}</pre>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-secondary" onclick="saveReport()">Save Report</button>
                     </div>
                 </div>
             </div>
-            {% endfor %}
+            {% endif %}
         </div>
-
-        <!-- Conversation Log -->
-        {% if conversation_log %}
-        <h2>Conversation Log</h2>
-        <div class="card mb-4">
-            <div class="card-body" id="conversation-log">
-                {% for message in conversation_log %}
-                <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-secondary" onclick="saveConversation()">Save Conversation Log</button>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Final Report -->
-        {% if report %}
-        <h2>Final Report</h2>
-        <div class="card mb-4">
-            <div class="card-body">
-                <pre>{{ report }}</pre>
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-secondary" onclick="saveReport()">Save Report</button>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Include JavaScript files -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <!-- Include Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <!-- Include Popper.js and Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 </body>
 </html>

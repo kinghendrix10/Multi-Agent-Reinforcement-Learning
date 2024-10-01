@@ -1,11 +1,12 @@
 # app.py
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 from agent import Agent
 from agent_network import AgentNetwork
 from llm_model import LLM 
 import os
+import json
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -33,7 +34,9 @@ if os.path.exists('config.yaml'):
 def index():
     if request.method == 'POST':
         task = request.form['task']
-        report, conversation_log = run_simulation(task)
+        run_simulation(task)
+        conversation_log = agent_network.get_conversation_log()
+        report = agent_network.generate_final_report()
         return render_template(
             'index.html',
             agents=agent_network.get_agents(),
@@ -41,11 +44,7 @@ def index():
             conversation_log=conversation_log,
             agent_network=agent_network
         )
-    return render_template(
-        'index.html',
-        agents=agent_network.get_agents(),
-        agent_network=agent_network
-    )
+    return render_template('index.html', agents=agent_network.get_agents(), agent_network=agent_network)
 
 @app.route('/manage_agents', methods=['GET'])
 def manage_agents():
@@ -112,6 +111,45 @@ def save_report():
 @socketio.on('message')
 def handle_message(message):
     emit('response', {'data': f'Received: {message}'})
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    data = request.get_json()
+    message = data.get('message', '')
+    response = {'status': 'error'}
+
+    # Detect if the message contains an agent tag
+    if '@' in message:
+        # Extract agent name
+        parts = message.split()
+        tagged_agents = [part[1:] for part in parts if part.startswith('@')]
+        for agent_name in tagged_agents:
+            # Find the agent by name
+            agent = agent_network.find_agent_by_name(agent_name)
+            if agent:
+                # Re-execute the agent's task
+                llm = LLM()
+                agent.execute(context=agent.parent_response, llm=llm)
+                # Update conversation log
+                agent_network.add_to_conversation_log({
+                    'sender': agent.name,
+                    'sender_name': agent.name,
+                    'text': agent.response,
+                    'agent_id': agent.agent_id
+                })
+                response = {
+                    'status': 'success',
+                    'response': agent.response,
+                    'agent_name': agent.name,
+                    'agent_id': agent.agent_id
+                }
+                break
+            else:
+                response = {'status': 'error', 'message': f'Agent "{agent_name}" not found.'}
+    else:
+        response = {'status': 'error', 'message': 'No agent tagged.'}
+
+    return jsonify(response)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

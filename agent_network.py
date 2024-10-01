@@ -5,7 +5,20 @@ class AgentNetwork:
         self.agents = {}
         self.root_agent = None
         self.next_agent_id = 1
+        self.conversation_log = []
 
+    def find_agent_by_name(self, name):
+        for agent in self.agents.values():
+            if agent.name == name:
+                return agent
+        return None
+
+    def add_to_conversation_log(self, message):
+        self.conversation_log.append(message)
+
+    def get_conversation_log(self):
+        return self.conversation_log
+    
     def get_next_agent_id(self):
         agent_id = self.next_agent_id
         self.next_agent_id += 1
@@ -38,7 +51,12 @@ class AgentNetwork:
         agents = list(self.agents.values())
         if exclude_id:
             agents = [agent for agent in agents if agent.agent_id != exclude_id]
+        # Add parent_name to each agent
+        for agent in agents:
+            parent_agent = self.agents.get(agent.parent)
+            agent.parent_name = parent_agent.name if parent_agent else 'None'
         return agents
+
 
     def get_agent(self, agent_id):
         return self.agents.get(agent_id)
@@ -52,17 +70,27 @@ class AgentNetwork:
     def execute(self, llm):
         if not self.root_agent:
             raise ValueError("No root agent defined.")
+        self.conversation_log = []  # Reset conversation log
         self.root_agent.execute(llm=llm)
-
+    
+    # Modify collect_conversation_log to build structured log
     def collect_conversation_log(self):
-        log = []
-        self._collect_agent_responses(self.root_agent, log)
-        return log
+        self.conversation_log = []
+        self._collect_agent_responses(self.root_agent)
+        return self.conversation_log
 
-    def _collect_agent_responses(self, agent, log):
-        log.append(f"{agent.name}: {agent.response}")
+    def _collect_agent_responses(self, agent):
+        # Add agent's response to the conversation log
+        self.conversation_log.append({
+            'sender': 'agent',
+            'sender_name': agent.name,
+            'text': agent.response,
+            'agent_id': agent.agent_id
+        })
+        # Save parent response for re-execution context
+        agent.parent_response = self.agents.get(agent.parent).response if agent.parent else ''
         for child in agent.children:
-            self._collect_agent_responses(child, log)
+            self._collect_agent_responses(child)
 
     def generate_final_report(self):
         report_lines = []
