@@ -6,15 +6,14 @@ class Agent:
         self.name = name
         self.role = role
         self.instructions = instructions
-        self.parent = parent  # Parent agent ID
-        self.children = []    # List of child Agent instances
+        self.parent = parent
+        self.children = []
         self.response = None
 
     def add_child(self, child_agent):
         self.children.append(child_agent)
 
     def execute(self, context="", llm=None):
-        # Generate the agent's response using the LLM
         system_prompt = f"You are an AI agent with the role of {self.role}."
         user_prompt = f"{self.instructions}\nContext: {context}"
 

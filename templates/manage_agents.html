@@ -24,7 +24,32 @@
                 </ul>
             </div>
         </nav>
-
+        <!-- Add New Agent -->
+        <h2>Add New Agent</h2>
+        <form action="{{ url_for('add_agent') }}" method="POST">
+            <div class="form-group">
+                <label for="name">Agent Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="role">Agent Role:</label>
+                <input type="text" class="form-control" id="role" name="role" required>
+            </div>
+            <div class="form-group">
+                <label for="instructions">Instructions (Goals):</label>
+                <textarea class="form-control" id="instructions" name="instructions" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="parent">Parent Agent:</label>
+                <select class="form-control" id="parent" name="parent">
+                    <option value="None">None</option>
+                    {% for agent in agents %}
+                    <option value="{{ agent.agent_id }}">{{ agent.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Add Agent</button>
+        </form>
         <!-- Agent List -->
         <h2>Existing Agents</h2>
         <table class="table table-bordered">
@@ -54,33 +79,6 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Add New Agent -->
-        <h2>Add New Agent</h2>
-        <form action="{{ url_for('add_agent') }}" method="POST">
-            <div class="form-group">
-                <label for="name">Agent Name:</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="role">Agent Role:</label>
-                <input type="text" class="form-control" id="role" name="role" required>
-            </div>
-            <div class="form-group">
-                <label for="instructions">Instructions (Goals):</label>
-                <textarea class="form-control" id="instructions" name="instructions" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="parent">Parent Agent:</label>
-                <select class="form-control" id="parent" name="parent">
-                    <option value="None">None</option>
-                    {% for agent in agents %}
-                    <option value="{{ agent.agent_id }}">{{ agent.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="btn btn-success">Add Agent</button>
-        </form>
     </div>
 
     <!-- Include JavaScript files -->

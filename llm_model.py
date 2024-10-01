@@ -2,7 +2,7 @@
 
 import os
 from dotenv import load_dotenv
-from cerebras import Cerebras  # Adjust the import based on the actual Cerebras SDK
+from cerebras.cloud.sdk import Cerebras
 
 load_dotenv()
 
