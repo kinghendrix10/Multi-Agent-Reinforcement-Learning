@@ -1,0 +1,59 @@
+<!-- templates/edit_agent.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Edit Agent</h1>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <a class="navbar-brand" href="#">Agent Simulator</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_agents') }}">Manage Agents</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Edit Agent Form -->
+        <form action="{{ url_for('edit_agent', agent_id=agent.agent_id) }}" method="POST">
+            <div class="form-group">
+                <label for="name">Agent Name:</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ agent.name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="role">Agent Role:</label>
+                <input type="text" class="form-control" id="role" name="role" value="{{ agent.role }}" required>
+            </div>
+            <div class="form-group">
+                <label for="instructions">Instructions (Goals):</label>
+                <textarea class="form-control" id="instructions" name="instructions" required>{{ agent.instructions }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="parent">Parent Agent:</label>
+                <select class="form-control" id="parent" name="parent">
+                    <option value="None">None</option>
+                    {% for parent_agent in parents %}
+                    <option value="{{ parent_agent.agent_id }}" {% if parent_agent.agent_id == agent.parent %}selected{% endif %}>{{ parent_agent.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Update Agent</button>
+        </form>
+    </div>
+
+    <!-- Include JavaScript files -->
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+</body>
+</html>
