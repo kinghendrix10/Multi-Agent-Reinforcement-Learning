@@ -1,8 +1,29 @@
-/* static/css/styles.css */
+/* static/css/style.css */
+
 body {
-    padding-top: 56px;
+    font-family: Arial, sans-serif;
+    background-color: #f4f9ff;
+}
+
+h1, h2 {
+    color: #333;
 }
 
 .card {
-    margin-bottom: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+pre {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #e7f0ff;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.table {
+    background-color: #fff;
 }
