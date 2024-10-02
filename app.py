@@ -1,16 +1,20 @@
 # app.py
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file
 from flask_socketio import SocketIO, emit
 from agent import Agent, ReportAgent
 from agent_network import AgentNetwork
 from llm_model import LLM 
 import os
 import json
+import io
+import re
+import pdfkit
+from docx import Document
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-
+llm = LLM()
 # Initialize agent network
 agent_network = AgentNetwork()
 
@@ -111,7 +115,14 @@ def run_simulation(task):
     # Execute the report agent
     report_agent.execute(agents_data=agents_data, llm=llm)
     report = report_agent.response
+    # Emit the new report to the frontend
+    socketio.emit('update_report', {'report': report})
     return report, conversation_log
+
+def extract_tagged_agents(message):
+    # Use regex to find all words starting with '@'
+    tagged_agents = re.findall(r'@(\w+)', message)
+    return tagged_agents
 
 @app.route('/save_conversation', methods=['POST'])
 def save_conversation():
@@ -127,6 +138,12 @@ def save_report():
         f.write(report)
     return {'status': 'success'}
 
+@app.route('/finalize_report', methods=['POST'])
+def finalize_report():
+    report_agent.finalize_report()
+    # Optionally, prevent further edits or agent updates
+    return jsonify({'status': 'success', 'message': 'Report finalized.'})
+
 @socketio.on('message')
 def handle_message(message):
     emit('response', {'data': f'Received: {message}'})
@@ -137,18 +154,14 @@ def send_message():
     message = data.get('message', '')
     response = {'status': 'error'}
 
-    # Detect if the message contains an agent tag
-    if '@' in message:
-        # Extract agent name
-        parts = message.split()
-        tagged_agents = [part[1:] for part in parts if part.startswith('@')]
+    tagged_agents = extract_tagged_agents(message)
+
+    if tagged_agents:
         for agent_name in tagged_agents:
-            # Find the agent by name
             agent = agent_network.find_agent_by_name(agent_name)
             if agent:
-                # Re-execute the agent's task
-                llm = LLM()
-                agent.execute(context=agent.parent_response, llm=llm)
+                # Process user feedback or new instructions
+                agent.process_user_feedback(message, llm=llm)
                 # Update conversation log
                 agent_network.add_to_conversation_log({
                     'sender': agent.name,
@@ -162,13 +175,42 @@ def send_message():
                     'agent_name': agent.name,
                     'agent_id': agent.agent_id
                 }
-                break
             else:
                 response = {'status': 'error', 'message': f'Agent "{agent_name}" not found.'}
     else:
         response = {'status': 'error', 'message': 'No agent tagged.'}
 
     return jsonify(response)
+
+@app.route('/export_report', methods=['GET'])
+def export_report():
+    format = request.args.get('format')
+    report_content = report_agent.response
+
+    if format == 'pdf':
+        # Convert to PDF
+        pdf = pdfkit.from_string(report_content, False)
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = 'attachment; filename=report.pdf'
+        return response
+    elif format == 'word':
+        # Convert to Word document
+        document = Document()
+        document.add_paragraph(report_content)
+        f = io.BytesIO()
+        document.save(f)
+        f.seek(0)
+        return send_file(f, as_attachment=True, attachment_filename='report.docx')
+    elif format == 'markdown':
+        # Convert to Markdown file
+        response = make_response(report_content)
+        response.headers['Content-Type'] = 'text/markdown'
+        response.headers['Content-Disposition'] = 'attachment; filename=report.md'
+        return response
+    else:
+        return jsonify({'status': 'error', 'message': 'Invalid format'})
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

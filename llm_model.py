@@ -25,3 +25,5 @@ class LLM:
             top_p=1
         )
         return response.choices[0].message.content
+
+# Implement rate limiting for the LLM API

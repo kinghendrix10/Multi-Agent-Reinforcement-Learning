@@ -1,5 +1,12 @@
 // static/js/script.js
 
+var socket = io.connect('http://' + window.location.hostname + ':' + location.port);
+
+socket.on('update_report', function(data) {
+    document.getElementById('report-content').innerHTML = data.report;
+});
+
+
 function saveConversation() {
     const conversationLog = document.getElementById('conversation-log').innerText;
     fetch('/save_conversation', {

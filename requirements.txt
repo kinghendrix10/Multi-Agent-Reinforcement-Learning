@@ -9,3 +9,4 @@ Jinja2
 itsdangerous
 Werkzeug
 MarkupSafe
+google-search-results
