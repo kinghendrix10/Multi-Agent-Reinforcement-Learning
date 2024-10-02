@@ -2,7 +2,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
-from agent import Agent
+from agent import Agent, ReportAgent
 from agent_network import AgentNetwork
 from llm_model import LLM 
 import os
@@ -34,9 +34,10 @@ if os.path.exists('config.yaml'):
 def index():
     if request.method == 'POST':
         task = request.form['task']
-        run_simulation(task)
-        conversation_log = agent_network.get_conversation_log()
-        report = agent_network.generate_final_report()
+        report, conversation_log = run_simulation(task)
+        # run_simulation(task)
+        # conversation_log = agent_network.get_conversation_log()
+        # report = agent_network.generate_final_report()
         return render_template(
             'index.html',
             agents=agent_network.get_agents(),
@@ -49,7 +50,7 @@ def index():
 @app.route('/manage_agents', methods=['GET'])
 def manage_agents():
     agents = agent_network.get_agents()
-    return render_template('manage_agents.html', agents=agents, agent_network=agent_network)
+    return render_template('manage_agents.html', agents=agents, agent_network=agent_network, report_agent=report_agent)
 
 @app.route('/add_agent', methods=['POST'])
 def add_agent():
@@ -83,15 +84,33 @@ def delete_agent(agent_id):
     agent_network.delete_agent(agent_id)
     return redirect(url_for('manage_agents'))
 
+@app.route('/edit_report_agent', methods=['GET', 'POST'])
+def edit_report_agent():
+    if request.method == 'POST':
+        data = request.form
+        report_agent.name = data['name']
+        report_agent.role = data['role']
+        report_agent.instructions = data['instructions']
+        return redirect(url_for('manage_agents'))
+    return render_template('edit_report_agent.html', agent=report_agent)
+
+report_agent = ReportAgent(
+    agent_id=9999,  # Use a unique ID that doesn't conflict with other agents
+    name="ReportAgent",
+    role="A skilled writer, you generate reports with a detailed overview of the task.",
+    instructions="""As a skilled business analyst and writer, generate a comprehensive report.
+    Compile data and insights from all other agents, structure the report with clear sections and appropriate headings, introduction, body, and actionable conclusion. Ensure the report is clear, concise, and professional."""
+)
+
 def run_simulation(task):
     llm = LLM()  # Initialize your LLM client
-    agent_network.set_root_instructions(task)  # Set the task as the root agent's instructions
-    agent_network.execute(llm=llm)
-
+    agent_network.execute(llm=llm, task=task)
     # Collect responses
     conversation_log = agent_network.collect_conversation_log()
-    report = agent_network.generate_final_report()
-
+    agents_data = agent_network.get_agents_responses()
+    # Execute the report agent
+    report_agent.execute(agents_data=agents_data, llm=llm)
+    report = report_agent.response
     return report, conversation_log
 
 @app.route('/save_conversation', methods=['POST'])

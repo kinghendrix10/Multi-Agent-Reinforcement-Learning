@@ -67,11 +67,11 @@ class AgentNetwork:
         else:
             raise ValueError("No root agent defined.")
 
-    def execute(self, llm):
+    def execute(self, llm, task):
         if not self.root_agent:
             raise ValueError("No root agent defined.")
         self.conversation_log = []  # Reset conversation log
-        self.root_agent.execute(llm=llm)
+        self.root_agent.execute(task=task, llm=llm)
     
     # Modify collect_conversation_log to build structured log
     def collect_conversation_log(self):
@@ -120,3 +120,11 @@ class AgentNetwork:
                     parent_agent.add_child(agent)
                 else:
                     raise ValueError(f"Parent agent with ID '{agent.parent}' not found.")
+
+    def get_agents_responses(self):
+        responses = ""
+        for agent in self.agents.values():
+            # Exclude the report agent if it's in the agents list
+            if agent.agent_id != 9999:
+                responses += f"Agent {agent.name} ({agent.role}):\n{agent.response}\n\n"
+        return responses

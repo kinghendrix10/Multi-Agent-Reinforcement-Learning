@@ -24,6 +24,27 @@
                 </ul>
             </div>
         </nav>
+        <h2>Report Agent</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Instructions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ report_agent.name }}</td>
+                    <td>{{ report_agent.role }}</td>
+                    <td>{{ report_agent.instructions }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_report_agent') }}" class="btn btn-primary btn-sm">Edit</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
         <!-- Add New Agent -->
         <h2>Add New Agent</h2>
         <form action="{{ url_for('add_agent') }}" method="POST">
