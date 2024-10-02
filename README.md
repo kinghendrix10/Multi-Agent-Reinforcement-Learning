@@ -17,7 +17,6 @@ This project is a multi-agent reinforcement learning simulator built using Flask
 
 - Dashboard homepage with an overview and quick actions
 - Card-based representation of agents and tasks
-- Sidebar navigation for detailed management functions
 - Modal dialogs for creating/editing agents and executing tasks
 - Tabs for conversation logs and report generation
 - Real-time communication between agents and the frontend using Flask-SocketIO
@@ -66,6 +65,7 @@ The dashboard provides an overview of the simulator and quick actions to start a
 ### Agents
 
 The agents section displays a card-based representation of all the agents. Each card shows the agent's role and tools. You can create, edit, and delete agents using the provided buttons.
+The ReportAgent is created by default and can be edited but not deleted, as this is the agent that generates the final report.
 
 ### Tasks
 
@@ -73,21 +73,17 @@ The tasks section allows you to define and execute tasks for the agents. You can
 
 ### Conversation Logs
 
-The conversation logs tab displays the interactions between the agents during the simulation.
+The conversation logs tab displays the interactions between the agents during the simulation. You can tag any agent using "@" and the AgentName to request the agent to refine its output.
 
 ### Reports
 
-The reports tab provides a detailed report of the simulation, including the contributions of each agent.
+The reports tab provides a detailed report of the simulation, including the contributions of each agent. You can save the report (Work in progress)
 
 ## UI Elements
 
-### Sidebar Navigation
-
-The sidebar provides navigation links to different sections of the simulator, including the overview, agents, tasks, conversation logs, and reports.
-
 ### Modal Dialogs
 
-Modal dialogs are used for creating and editing agents. The dialogs include fields for the agent's name, role, and tools.
+Modal dialogs are used for creating and editing agents. The dialogs include fields for the agent's name, role, and instructions to guide it.
 
 ### Tabs
 
