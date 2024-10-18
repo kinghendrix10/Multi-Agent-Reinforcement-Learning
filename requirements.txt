@@ -10,3 +10,8 @@ itsdangerous
 Werkzeug
 MarkupSafe
 google-search-results
+serpapi
+pillow
+dspy-ai
+pypi-json
+pydantic

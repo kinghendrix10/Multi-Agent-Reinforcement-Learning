@@ -1,0 +1,19 @@
+<!-- templates/modals.html -->
+
+<!-- In your Agents Tab -->
+<div class="modal fade" id="agentDetailsModal" tabindex="-1" aria-labelledby="agentDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="card mb-4 mt-3">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('generate_agents') }}">
+                    <div class="form-group">
+                        <label for="task">Enter Task Description for Agent Team Generation:</label>
+                        <textarea class="form-control" id="task" name="task" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Agent Team</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

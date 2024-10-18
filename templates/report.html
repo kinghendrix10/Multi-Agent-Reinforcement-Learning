@@ -1,0 +1,18 @@
+<!-- templates/report.html -->
+
+{% extends 'index.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Final Report</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <pre>{{ report }}</pre>
+            {% if diagram_definition %}
+            <div class="mermaid">
+                {{ diagram_definition | safe }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

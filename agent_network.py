@@ -1,9 +1,11 @@
 # agent_network.py
 
+import asyncio
+
 class AgentNetwork:
     def __init__(self):
         self.agents = {}
-        self.root_agent = None
+        self.root_agents = []
         self.next_agent_id = 1
         self.conversation_log = []
 
@@ -18,7 +20,7 @@ class AgentNetwork:
 
     def get_conversation_log(self):
         return self.conversation_log
-    
+
     def get_next_agent_id(self):
         agent_id = self.next_agent_id
         self.next_agent_id += 1
@@ -26,14 +28,14 @@ class AgentNetwork:
 
     def add_agent(self, agent):
         self.agents[agent.agent_id] = agent
-        if agent.parent is None:
-            self.root_agent = agent
+        if agent.parent_id is None:
+            self.root_agents.append(agent)  # Corrected line
         else:
-            parent_agent = self.agents.get(agent.parent)
+            parent_agent = self.agents.get(agent.parent_id)
             if parent_agent:
                 parent_agent.add_child(agent)
             else:
-                raise ValueError(f"Parent agent with ID '{agent.parent}' not found.")
+                raise ValueError(f"Parent agent with ID '{agent.parent_id}' not found.")
 
     def update_agent(self, agent):
         self.agents[agent.agent_id] = agent
@@ -53,30 +55,26 @@ class AgentNetwork:
             agents = [agent for agent in agents if agent.agent_id != exclude_id]
         # Add parent_name to each agent
         for agent in agents:
-            parent_agent = self.agents.get(agent.parent)
+            parent_agent = self.agents.get(agent.parent_id)
             agent.parent_name = parent_agent.name if parent_agent else 'None'
         return agents
 
-
     def get_agent(self, agent_id):
-        return self.agents.get(agent_id)
-
-    def set_root_instructions(self, instructions):
-        if self.root_agent:
-            self.root_agent.instructions = instructions
-        else:
-            raise ValueError("No root agent defined.")
+        return self.agents.get(int(agent_id))
 
     def execute(self, llm, task):
-        if not self.root_agent:
-            raise ValueError("No root agent defined.")
-        self.conversation_log = []  # Reset conversation log
-        self.root_agent.execute(task=task, llm=llm)
-    
-    # Modify collect_conversation_log to build structured log
+        # Asynchronous execution of root agents
+        self.conversation_log = []
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        tasks = [root_agent.async_execute(task=task, llm=llm) for root_agent in self.root_agents]
+        loop.run_until_complete(asyncio.gather(*tasks))
+        loop.close()
+
     def collect_conversation_log(self):
         self.conversation_log = []
-        self._collect_agent_responses(self.root_agent)
+        for root_agent in self.root_agents:
+            self._collect_agent_responses(root_agent)
         return self.conversation_log
 
     def _collect_agent_responses(self, agent):
@@ -88,38 +86,9 @@ class AgentNetwork:
             'agent_id': agent.agent_id
         })
         # Save parent response for re-execution context
-        agent.parent_response = self.agents.get(agent.parent).response if agent.parent else ''
+        agent.parent_response = self.agents.get(agent.parent_id).response if agent.parent_id else ''
         for child in agent.children:
             self._collect_agent_responses(child)
-
-    def generate_final_report(self):
-        report_lines = []
-        self._collect_agent_contributions(self.root_agent, report_lines)
-        return '\n'.join(report_lines)
-
-    def _collect_agent_contributions(self, agent, report_lines, depth=0):
-        indent = "  " * depth
-        report_lines.append(f"{indent}- {agent.name} ({agent.role}):")
-        response_lines = agent.response.strip().split('\n')
-        for line in response_lines:
-            report_lines.append(f"{indent}  {line}")
-        for child in agent.children:
-            self._collect_agent_contributions(child, report_lines, depth + 1)
-
-    def _rebuild_hierarchy(self):
-        # Clear current hierarchy
-        for agent in self.agents.values():
-            agent.children = []
-        # Rebuild hierarchy based on parent IDs
-        for agent in self.agents.values():
-            if agent.parent is None:
-                self.root_agent = agent
-            else:
-                parent_agent = self.agents.get(agent.parent)
-                if parent_agent:
-                    parent_agent.add_child(agent)
-                else:
-                    raise ValueError(f"Parent agent with ID '{agent.parent}' not found.")
 
     def get_agents_responses(self):
         responses = ""
@@ -128,3 +97,20 @@ class AgentNetwork:
             if agent.agent_id != 9999:
                 responses += f"Agent {agent.name} ({agent.role}):\n{agent.response}\n\n"
         return responses
+
+    def _rebuild_hierarchy(self):
+        # Clear current hierarchy
+        for agent in self.agents.values():
+            agent.children = []
+        # Clear root agents list
+        self.root_agents = []
+        # Rebuild hierarchy based on parent IDs
+        for agent in self.agents.values():
+            if agent.parent_id is None:
+                self.root_agents.append(agent)  # Corrected line
+            else:
+                parent_agent = self.agents.get(agent.parent_id)
+                if parent_agent:
+                    parent_agent.add_child(agent)
+                else:
+                    raise ValueError(f"Parent agent with ID '{agent.parent_id}' not found.")

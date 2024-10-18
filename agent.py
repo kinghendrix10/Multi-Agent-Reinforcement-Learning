@@ -1,4 +1,5 @@
 # agent.py
+import asyncio
 import os
 import requests
 import serpapi
@@ -7,12 +8,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Agent:
-    def __init__(self, agent_id, name, role, instructions, parent=None):
+    def __init__(self, agent_id, name, role, instructions, parent_id=None):
         self.agent_id = agent_id
         self.name = name
         self.role = role
         self.instructions = instructions
-        self.parent = parent  # Parent agent ID
+        self.parent_id = parent_id  # Parent agent ID
         self.children = []    # List of child Agent instances
         self.response = None
         self.parent_response = ''  # Store parent's response for context
@@ -21,7 +22,13 @@ class Agent:
     def add_child(self, child_agent):
         self.children.append(child_agent)
 
-    def execute(self, task="", context="", llm=None):
+    async def async_execute(self, task="", context="", llm=None, visited_agents=None):
+        if visited_agents is None:
+            visited_agents = set()
+        if self.agent_id in visited_agents:
+            print(f"Agent {self.name} (ID: {self.agent_id}) already executed. Skipping to prevent infinite loop.")
+            return
+        visited_agents.add(self.agent_id)
         # Generate the agent's response using the LLM
         system_prompt = f"You are an AI agent with the role of {self.role}."
         user_prompt = f"{self.instructions}\nTask: {task}\nContext: {context}"
@@ -33,10 +40,12 @@ class Agent:
             user_prompt += f"\nWeb Search Results:\n{search_results}"
 
         if llm:
-            self.response = llm.generate_response(system_prompt, user_prompt)
+            loop = asyncio.get_event_loop()
+            # Run the synchronous generate_response in an executor
+            self.response = await loop.run_in_executor(None, llm.generate_response, system_prompt, user_prompt)
         else:
             self.response = "Default response without LLM."
-        
+
         # Save the context for potential re-execution
         self.parent_response = context
 
@@ -46,11 +55,18 @@ class Agent:
             'text': self.response,
             'agent_id': self.agent_id
         })
-        
-        # Execute child agents with the current agent's response as context
+
+        # Execute child agents synchronously
         for child in self.children:
             child.conversation_log = self.conversation_log.copy()
-            child.execute(task=task, context=self.response, llm=llm)
+            await child.async_execute(task=task, context=self.response, llm=llm, visited_agents=visited_agents)
+
+    def execute(self, task="", context="", llm=None):
+        # Synchronous wrapper around async_execute
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.async_execute(task=task, context=context, llm=llm))
+        loop.close()
 
     def update_parameters(self, **kwargs):
         self.parameters.update(kwargs)
@@ -59,7 +75,10 @@ class Agent:
         # Update instructions or context based on feedback
         self.instructions += f"\nUser Feedback: {feedback}"
         # Re-execute the agent with the new instructions
-        self.execute(context=self.parent_response, llm=llm)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.async_execute(context=self.parent_response, llm=llm))
+        loop.close()
 
     def web_search(self, query, num_results=3):
         api_key = os.environ.get("SERPAPI_API_KEY")
@@ -114,22 +133,24 @@ class Agent:
             'name': self.name,
             'role': self.role,
             'instructions': self.instructions,
-            'parent': self.parent
+            'parent_id': self.parent_id
         }
-
 
 class ReportAgent(Agent):
     def __init__(self, agent_id, name, role, instructions):
         super().__init__(agent_id, name, role, instructions)
         self.response = None
 
-    def execute(self, agents_data, llm=None):
+    async def execute(self, agents_data, llm=None, task=""):
         # Generate the report using the LLM
         system_prompt = f"You are {self.role}."
-        user_prompt = f"{self.instructions}\n\nHere are the findings from other agents:\n{agents_data}"
-
+        if agents_data:
+            user_prompt = f"{self.instructions}\n\nHere are the findings from other agents:\n{agents_data}"
+        else:
+            user_prompt = f"{self.instructions}\n\nWrite a report:\n{task}"
         if llm:
-            self.response = llm.generate_response(system_prompt, user_prompt)
+            loop = asyncio.get_event_loop()
+            self.response = await loop.run_in_executor(None, llm.generate_response, system_prompt, user_prompt)
         else:
             self.response = "Default report without LLM."
 

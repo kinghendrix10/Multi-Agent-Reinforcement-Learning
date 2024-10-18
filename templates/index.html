@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Agent Network Simulator</title>
@@ -9,6 +10,7 @@
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
 </head>
+
 <body>
     <div class="container mt-4">
         <h1 class="text-center">Agent Network Simulator</h1>
@@ -19,8 +21,17 @@
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('manage_agents') }}">Manage Agents</a>
                     </li>
+                    {% if view_agent_network %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('view_agent_network') }}">Agent Network</a>
+                    </li>
+                    {% endif %}
+                    <!-- Add more navigation links as needed -->
                 </ul>
             </div>
         </nav>
@@ -28,14 +39,17 @@
         <!-- Tabs -->
         <ul class="nav nav-tabs" id="mainTab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" id="agents-tab" data-toggle="tab" href="#agents" role="tab" aria-controls="agents" aria-selected="true">Agents</a>
+                <a class="nav-link active" id="agents-tab" data-toggle="tab" href="#agents" role="tab"
+                    aria-controls="agents" aria-selected="true">Agents</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="conversation-tab" data-toggle="tab" href="#conversation" role="tab" aria-controls="conversation" aria-selected="false">Conversation</a>
+                <a class="nav-link" id="conversation-tab" data-toggle="tab" href="#conversation" role="tab"
+                    aria-controls="conversation" aria-selected="false">Conversation</a>
             </li>
             {% if report %}
             <li class="nav-item">
-                <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report" aria-selected="false">Report</a>
+                <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report"
+                    aria-selected="false">Report</a>
             </li>
             {% endif %}
         </ul>
@@ -52,10 +66,40 @@
                                 <input type="text" class="form-control" id="task" name="task" required>
                             </div>
                             <button type="submit" class="btn btn-primary">Execute Task</button>
+                            <form method="POST" action="{{ url_for('generate_agents') }}" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-secondary" data-toggle="modal" data-target="#agentDetailsModal"></button>
+                                    <i class="bi bi-plus me-1"></i> Generate Agent Team
+                                </button>
+                            </form>
                         </form>
                     </div>
                 </div>
+                <!-- Overview Cards -->
+                <div class="row">
+                    <!-- Tasks Overview Card -->
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h3>Tasks Overview</h3>
+                            </div>
+                            <div class="card-body">
+                                <p id="tasksOverview">Loading tasks...</p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Latest Reports Card -->
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h3>Latest Reports</h3>
+                            </div>
+                            <div class="card-body">
+                                <p id="latestReports">No reports yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Agents Display -->
                 <h2>Agents</h2>
                 <div class="row">
@@ -88,15 +132,15 @@
                         {% endfor %}
                     </div>
                     <div class="chat-input">
-                        <input type="text" id="chat-input" placeholder="Type a message..." class="form-control" onkeydown="if(event.key === 'Enter') sendMessage();">
-                        <button id="send-button" class="btn btn-primary" onclick="sendMessage()">Send</button>
+                        <input type="text" id="chat-input" placeholder="Type a message..." class="form-control">
+                        <button id="send-button" class="btn btn-primary">Send</button>
                     </div>
                 </div>
                 {% else %}
                 <p>No conversation yet. Execute a task to start.</p>
                 {% endif %}
             </div>
-                    
+
             <!-- Report Tab -->
             {% if report %}
             <div class="tab-pane fade" id="report" role="tabpanel" aria-labelledby="report-tab">
@@ -106,7 +150,8 @@
                         <pre>{{ report }}</pre>
                     </div>
                     <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportMenuButton"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Export Report
                         </button>
                         <div class="dropdown-menu" aria-labelledby="exportMenuButton">
@@ -119,14 +164,26 @@
             </div>
             {% endif %}
         </div>
+        <!-- Modals -->
+        {% include 'modals.html' %}
     </div>
 
     <!-- Include JavaScript files -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <!-- Include Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <!-- Include Popper.js and Bootstrap JS -->
+    <!-- Include jQuery (Full Version) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <!-- Include Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+    <!-- Include Bootstrap JS -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+    <!-- Include Socket.IO -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+    <!-- Include your JavaScript file after all dependencies -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 </body>
+
 </html>
