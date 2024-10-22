@@ -1,0 +1,28 @@
+.
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── backend
+│   ├── agent.py
+│   ├── agent_network.py
+│   ├── app.py
+│   └── llm_model.py
+├── frontend
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── js
+│   │       └── script.js
+│   └── templates
+│       ├── agent_network.html
+│       ├── edit_agent.html
+│       ├── edit_report_agent.html
+│       ├── index.html
+│       ├── layout.html
+│       ├── manage_agents.html
+│       ├── modals.html
+│       ├── report.html
+│       └── sidebar.html
+├── data
+│   └── report.txt
+└── file_structure.txt
