@@ -1,6 +1,7 @@
 # agent_network.py
 
 import asyncio
+from backend.agent import Agent
 
 class AgentNetwork:
     def __init__(self):
