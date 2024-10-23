@@ -15,3 +15,6 @@ pillow
 dspy-ai
 pypi-json
 pydantic
+python-docx
+pdfkit
+eventlet

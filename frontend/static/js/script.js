@@ -65,8 +65,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialize Mermaid.js
-    mermaid.initialize({ startOnLoad: true });
+    // Initialize Mermaid.js only if it exists
+    if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: true });
+    }
 
     // Handle Start Simulation button click
     $('#startSimulationBtn').click(function() {
